@@ -9,16 +9,18 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-
       - name: Call keep_alive
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
         run: |
           date -u
-          echo "Calling Supabase keep_alive RPC..."
-          curl -sS -X POST "${SUPABASE_URL}/rest/v1/rpc/keep_alive" \
+          echo "URL secret ends with: ${SUPABASE_URL: -14}"
+          code=$(curl -sS -o response.txt -w '%{http_code}' -X POST "${SUPABASE_URL}/rest/v1/rpc/keep_alive" \
             -H "apikey: ${SUPABASE_KEY}" \
             -H "Content-Type: application/json" \
-            -d '{}' \
-            -w '\nHTTP_STATUS: %{http_code}\n'
+            -d '{}')
+          echo "HTTP status: $code"
+          cat response.txt
+          echo
+          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then exit 1; fi
